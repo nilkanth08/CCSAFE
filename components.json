@@ -1,0 +1,38 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "src/app/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@/components",
+    "utils": "@/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
+}
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyAdZmlMYkzSi7Q4ksVMh8IzwcEray7GSDA",
+  authDomain: "cardsafe-keeper.firebaseapp.com",
+  projectId: "cardsafe-keeper",
+  storageBucket: "cardsafe-keeper.firebasestorage.app",
+  messagingSenderId: "914427408287",
+  appId: "1:914427408287:web:ff27bedc8fdcaafe5b57aa"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
