@@ -1,9 +1,6 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  basePath: '/CCSAFE',
-  assetPrefix: '/CCSAFE/',
-  output: 'export',
   /* config options here */
   typescript: {
     ignoreBuildErrors: true,

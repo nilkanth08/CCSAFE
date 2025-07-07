@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect, useMemo } from "react";
 import { PlusCircle, Search, FileDown, LayoutGrid, List, Upload } from "lucide-react";
-import { addMonths } from "date-fns";
+import { addMonths, set } from "date-fns";
 
 import { Button } from "@/components/ui/button";
 import Header from "@/components/header";
@@ -10,7 +10,6 @@ import SummaryReport from "@/components/summary-report";
 import CreditCardList from "@/components/credit-card-list";
 import { CreditCardForm } from "@/components/credit-card-form";
 import { ImportCsvDialog } from "@/components/import-csv-dialog";
-import { useCardStore } from "@/hooks/use-card-store";
 import type { CreditCard } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { getCardStatus, type CardStatus } from "@/lib/utils";
@@ -22,21 +21,47 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { exportToPdf, exportToExcel } from "@/lib/export";
+import withAuth from "@/components/with-auth";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase";
 
 const Home = () => {
   const [isClient, setIsClient] = useState(false);
-
-  const { cards, updateCard } = useCardStore();
+  const [user] = useAuthState(auth);
   const { toast } = useToast();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<CreditCard | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [isImporting, setIsImporting] = useState(false);
+  const [cards, setCards] = useState<CreditCard[]>([]);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const q = query(collection(db, "users", user.uid, "cards"));
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const cards: CreditCard[] = [];
+        querySnapshot.forEach((doc) => {
+          cards.push({ id: doc.id, ...doc.data() } as CreditCard);
+        });
+        setCards(cards);
+      });
+      return () => unsubscribe();
+    }
+  }, [user]);
+
+  const updateCard = async (card: CreditCard) => {
+    if (user) {
+      const cardRef = doc(db, "users", user.uid, "cards", card.id);
+      await setDoc(cardRef, card, { merge: true });
+    }
+  };
   
   useEffect(() => {
     if (!isClient) return;
@@ -234,4 +259,4 @@ const Home = () => {
   );
 }
 
-export default Home;
+export default withAuth(Home);

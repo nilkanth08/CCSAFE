@@ -15,8 +15,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { cardFormSchema, type CardFormValues } from "@/lib/schemas";
 import type { CreditCard } from "@/lib/types";
-import { useCardStore } from "@/hooks/use-card-store";
 import { cn } from "@/lib/utils";
+import { db, auth } from "@/lib/firebase";
+import { doc, setDoc, addDoc, collection } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 interface CreditCardFormProps {
   isOpen: boolean;
@@ -34,8 +36,8 @@ const fileToBase64 = (file: File): Promise<string> => {
 };
 
 export function CreditCardForm({ isOpen, onClose, card }: CreditCardFormProps) {
-  const { addCard, updateCard } = useCardStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [user] = useAuthState(auth);
 
   const form = useForm<CardFormValues>({
     resolver: zodResolver(cardFormSchema),
@@ -98,6 +100,8 @@ export function CreditCardForm({ isOpen, onClose, card }: CreditCardFormProps) {
   }, [card, form, isOpen]);
 
   const onSubmit = async (values: CardFormValues) => {
+    if (!user) return;
+
     setIsSubmitting(true);
     let imageFrontBase64: string | undefined = card?.cardImageFront;
     if (values.cardImageFront && values.cardImageFront.length > 0) {
@@ -109,13 +113,27 @@ export function CreditCardForm({ isOpen, onClose, card }: CreditCardFormProps) {
       imageBackBase64 = await fileToBase64(values.cardImageBack[0]);
     }
 
-    const cardData = {
-        ...values,
+    const cardData: Omit<CreditCard, 'id'> = {
+        cardholderName: values.cardholderName,
+        bankName: values.bankName,
+        mobileNumber: values.mobileNumber,
+        cardType: values.cardType,
+        cardVariant: values.cardVariant,
+        cardNumber: values.cardNumber,
+        expiryDate: values.expiryDate,
+        cvv: values.cvv,
+        cardLimit: values.cardLimit,
+        billAmount: values.billAmount,
         billDate: values.billDate.toISOString(),
         dueDate: values.dueDate.toISOString(),
-        birthDate: values.birthDate ? values.birthDate.toISOString() : undefined,
         cardImageFront: imageFrontBase64,
         cardImageBack: imageBackBase64,
+        birthDate: values.birthDate ? values.birthDate.toISOString() : undefined,
+        cardPin: values.cardPin,
+        appPin: values.appPin,
+        ifscCode: values.ifscCode,
+        statementPassword: values.statementPassword,
+        payments: [],
     };
 
     if (card) {
@@ -123,9 +141,10 @@ export function CreditCardForm({ isOpen, onClose, card }: CreditCardFormProps) {
       if (card.billAmount !== values.billAmount) {
         updatedCardData.payments = [];
       }
-      updateCard(updatedCardData);
+      const cardRef = doc(db, "users", user.uid, "cards", card.id);
+      await setDoc(cardRef, updatedCardData, { merge: true });
     } else {
-      addCard(cardData as Omit<CreditCard, 'id' | 'payments'>);
+      await addDoc(collection(db, "users", user.uid, "cards"), cardData);
     }
     
     setIsSubmitting(false);
@@ -138,7 +157,7 @@ export function CreditCardForm({ isOpen, onClose, card }: CreditCardFormProps) {
         <DialogHeader>
           <DialogTitle>{card ? "Edit Credit Card" : "Add New Credit Card"}</DialogTitle>
           <DialogDescription>
-            {card ? "Update the details of your credit card." : "Enter the details of your new credit card."} All data is saved locally on your device.
+            {card ? "Update the details of your credit card." : "Enter the details of your new credit card."} All data is saved to your account.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
