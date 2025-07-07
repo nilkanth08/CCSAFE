@@ -22,7 +22,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { exportToPdf, exportToExcel } from "@/lib/export";
-import withAuth from "@/components/with-auth";
 
 const Home = () => {
   const [isClient, setIsClient] = useState(false);
@@ -235,4 +234,4 @@ const Home = () => {
   );
 }
 
-export default withAuth(Home);
+export default Home;

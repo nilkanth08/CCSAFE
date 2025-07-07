@@ -1,12 +1,15 @@
 {
   "name": "nextn",
   "version": "0.1.0",
+  "homepage": "https://nilkanth08.github.io/CCSAFE",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9003",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "next build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d out",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
@@ -57,7 +60,8 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "xlsx": "^0.18.5",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "gh-pages": "^3.2.3"
   },
   "devDependencies": {
     "@capacitor/android": "^7.4.0",
